@@ -1,66 +1,143 @@
 package com.example.jsalas30.catalogocidev;
 
-import android.support.v4.content.res.TypedArrayUtils;
+import com.onesignal.OneSignal;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
-
+import android.widget.Spinner;
+import android.widget.Toast;
+import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Stack;
+import java.util.List;
 
 public class CatalogActivity extends AppCompatActivity {
 
     public ArrayList<Game> games;
-    public String response;
-    public String responseStat;
-    private String number = "7fc039f3";
-    private String baseUrl = "http://" + number + ".ngrok.io";
+    private Spinner spinner;
+    private EditText searchText;
+    private Button searchBtn;
+    private GridView gridView;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
-        Bundle p = getIntent().getExtras();
-        baseUrl = p.getString("baseUrl");
+
+        OneSignal.startInit(this)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .unsubscribeWhenNotificationsAreDisabled(true)
+                .init();
+
+        searchText = findViewById(R.id.searchText);
+        searchBtn = findViewById(R.id.searchBtn);
+        gridView = findViewById(R.id.gridview);
+
+        searchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String argument = searchText.getText().toString();
+                String filter = spinner.getSelectedItem().toString();
+
+                JSONObject jsonParam = new JSONObject();
+                try{
+
+                    switch (filter){
+                        case "Título":
+                            jsonParam.put("filter", "title");
+                            break;
+                        case "Tag":
+                            jsonParam.put("filter", "tag");
+                            break;
+                        default:
+                            jsonParam.put("filter", "title");
+                            break;
+                    }
+                    jsonParam.put("argument", argument);
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
 
 
 
+                ApiController api = new ApiController("search", "POST", jsonParam);
+                api.execute();
+
+                Log.i("STAT_CODE", api.getResponseStat());
+
+                if (api.getResponseStat().equals("200")){
+
+                    gamesBuilder(api);
+                    refreshActivity();
+
+                }
+                // Login Failure
+                else {
+                    Toast.makeText(getApplicationContext(), "No se han encontrado resultados.", Toast.LENGTH_LONG).show();
+                }
+
+            }
+        });
+
+
+
+        addItemsOnSpinner();
         // Here you ask Laravel for the videogames.
-        getGames();
+        ApiController api = new ApiController("catalogue", "GET");
+        api.execute();
+        gamesBuilder(api);
 
 
 
-        GridView gridView = findViewById(R.id.gridview);
-        GamesAdapter gamesAdapter = new GamesAdapter(this,games, baseUrl);
-        gridView.setAdapter(gamesAdapter);
+        refreshActivity();
+
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView parent, View view, int position, long id) {
+                Log.i("GridViewItem", "He presionado el objeto ");
+                Game game = games.get(position);
+                goToGameActivity(game);
+
+                // This tells the GridView to redraw itself
+                // in turn calling your BooksAdapter's getView method again for each cell
+                //booksAdapter.notifyDataSetChanged();
+            }
+        });
 
 
     }
 
-    public void gamesBuilder(){
+    public void refreshActivity(){
+
+        GamesAdapter gamesAdapter = new GamesAdapter(this, games);
+        gridView.setAdapter(gamesAdapter);
+
+    }
+
+    public void gamesBuilder(ApiController api){
 
         try{
-            JSONObject resp = new JSONObject(response);
 
-            Iterator<String> keys = resp.keys();
+            JSONArray array = new JSONArray(api.getLastResponse());
             games = new ArrayList<>();
 
-            while(keys.hasNext()) {
-                String key = keys.next();
-                Log.i("KEYS", key);
 
-                JSONObject act = (JSONObject) resp.get(key);
-                //Log.i("NAMES", act.getString("title"));
+
+            for(int i = 0; i < array.length();  i++) {
+
+                JSONObject act = array.getJSONObject(i);
+                Log.i("JSON", act.toString());
                 Game actGame = new Game(act);
 
                 games.add(actGame);
@@ -69,64 +146,36 @@ public class CatalogActivity extends AppCompatActivity {
 
         }
         catch(Exception ex){
-
+            Log.i("JSONError", "Ha ocurrido un error parseando las llaves.");
+            ex.printStackTrace();
         }
 
     }
 
-    public void getGames() {
+    public void goToGameActivity(Game game){
 
+        Log.i("GameActivity", "Voy hacia el game activity.");
 
+        Intent intent = new Intent(this, GameActivity.class);
+        intent.putExtra("Game", game.toJSON().toString());
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        startActivity(intent);
 
-                String line;
-                StringBuilder outputStringBuilder = new StringBuilder();
+    }
 
-                response = "";
-                responseStat = "";
+    
 
-                try {
-                    URL url = new URL(baseUrl + "/api/catalogue");
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-                    conn.setRequestProperty("Accept","application/json");
-                    conn.setDoOutput(false);
-                    conn.setDoInput(true);
+    public void addItemsOnSpinner() {
 
-                    responseStat = String.valueOf(conn.getResponseCode());
+        spinner = (Spinner) findViewById(R.id.filterSpnr);
+        List<String> list = new ArrayList<String>();
+        list.add("Título");
+        list.add("Tag");
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(dataAdapter);
 
-                    Log.i("ACT_STAT", responseStat);
-                    Log.i("MSSG" , conn.getResponseMessage());
-
-                    if (responseStat.equals("200")){
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        while ((line = br.readLine()) != null) {
-                            outputStringBuilder.append(line);
-                        }
-
-                        response = outputStringBuilder.toString();
-                        Log.i("RSP",response);
-
-                    }
-
-
-
-                    conn.disconnect();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-
-        while(thread.isAlive()){}
-
-        gamesBuilder();
     }
 
 

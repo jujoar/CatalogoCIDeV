@@ -33,6 +33,23 @@ public class Game {
 
     }
 
+    public JSONObject toJSON(){
+        JSONObject object = new JSONObject();
+
+        try{
+            object.put("id", this.id);
+            object.put("title", this.title);
+            object.put("user_id", this.user_id);
+            object.put("description", this.description);
+            object.put("miniature", this.miniature);
+            object.put("video", this.video);
+            object.put("status", this.status);
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return object;
+    }
+
     public Game(JSONObject object) {
         try{
             this.id = object.getInt("id");
@@ -41,7 +58,7 @@ public class Game {
             this.description = object.getString("description");
             this.miniature = object.getString("miniature");
             this.video = object.getString("video");
-            this.status = object.getString("hidden");
+            this.status = object.getString("status");
         }
         catch(Exception ex){
 

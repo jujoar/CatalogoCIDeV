@@ -14,17 +14,18 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        android:defaultFocusHighlightEnabled="false"
         android:ems="10"
         android:hint="Email"
         android:inputType="textEmailAddress"
+        android:text="jjsa96@gmail.com"
         android:textAlignment="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.434"
-        tools:text="j@g.com" />
+        app:layout_constraintVertical_bias="0.434" />
 
     <EditText
         android:id="@+id/editText_login_password"
@@ -37,14 +38,14 @@
         android:ems="10"
         android:hint="Contraseña"
         android:inputType="textPassword"
+        android:text="12345"
         android:textAlignment="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.561"
-        tools:text="12345" />
+        app:layout_constraintVertical_bias="0.561" />
 
     <TextView
         android:id="@+id/textView"

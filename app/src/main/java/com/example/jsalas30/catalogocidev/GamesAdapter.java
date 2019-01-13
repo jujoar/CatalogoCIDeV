@@ -16,13 +16,11 @@ public class GamesAdapter extends BaseAdapter {
 
     private final Context mContext;
     private final ArrayList<Game> games;
-    private final String baseUrl;
 
     // 1
-    public GamesAdapter(Context context, ArrayList<Game> games, String baseUrl) {
+    public GamesAdapter(Context context, ArrayList<Game> games) {
         this.mContext = context;
         this.games = games;
-        this.baseUrl = baseUrl;
     }
 
     // 2
@@ -57,12 +55,12 @@ public class GamesAdapter extends BaseAdapter {
 
         // 3
         final ImageView imageView = (ImageView)convertView.findViewById(R.id.imageview_cover_art);
-        final TextView nameTextView = (TextView)convertView.findViewById(R.id.textview_book_name);
-        final TextView authorTextView = (TextView)convertView.findViewById(R.id.textview_book_author);
+        final TextView nameTextView = (TextView)convertView.findViewById(R.id.textview_game_name);
+        final TextView authorTextView = (TextView)convertView.findViewById(R.id.textview_game_description);
 
         // 4
         //imageView.setImageResource(game.getMiniature());
-        Picasso.get().load(baseUrl + "/" + game.getMiniature().replaceAll("\\bpublic\\b", "storage")).into(imageView);
+        Picasso.get().load(ApiController.getBaseUrl() + "/" + game.getMiniature().replaceAll("\\bpublic\\b", "storage")).into(imageView);
         nameTextView.setText(game.getTitle());
         authorTextView.setText(game.getDescription());
 

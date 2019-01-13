@@ -19,7 +19,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CatalogActivity"></activity>
+        <activity android:name=".CatalogActivity" />
+        <activity
+            android:name=".GameActivity"
+            android:hardwareAccelerated="true"></activity>
     </application>
 
 </manifest>
